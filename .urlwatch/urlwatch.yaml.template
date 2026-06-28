@@ -23,7 +23,7 @@ job_defaults:
 report:
   text:
     details: true
-    footer: true
+    footer: false
     line_length: 120
     minimal: false
 
