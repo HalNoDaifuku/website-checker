@@ -70,6 +70,56 @@ filter:
 
 ---
 
+name: "採用情報 - MAPPA"
+url: "https://www.mappa.co.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - MAD HOUSE"
+url: "https://madhouse.co.jp/recruit/"
+filter:
+  - css: "div.recruit-top__news"
+  - html2text
+  - strip
+
+---
+
+name: "採用情報 - MAD BOX"
+url: "https://madbox.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - チップチューン"
+url: "http://chiptune.co.jp/recruit.html"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(新卒) - LIDENFILMS"
+url: "https://lidenfilms.jp/recruit/newgraduate/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(中途) - LIDENFILMS"
+url: "https://lidenfilms.jp/recruit/midcareer/"
+filter:
+  - beautify
+  - strip
+
+
+---
+
 name: "採用情報(新卒) - ENGI"
 url: "https://engi-st.net/recruit_mid/"
 filter:
@@ -87,10 +137,51 @@ filter:
 
 ---
 
+name: "公式サイト - スタジオトゥインクル"
+url: "https://twinkle-anime.work/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - T2studio"
+url: "https://www.t2studio.co.jp/recruit.html"
+filter:
+  - beautify
+  - strip
+  
+---
+
+name: "採用情報 - カラー"
+url: "https://www.khara.co.jp/recruiting/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - Hibari Group"
+url: "https://hibari-group.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
 name: "採用情報 - ROLL2"
 url: "https://www.roll2.co.jp/"
 filter:
   css: "section#recruit"
+  - html2text
+  - strip
+
+---
+
+name: "採用情報 - REVOROOT"
+url: "http://revoroot.co.jp/"
+filter:
+  - css: "section#recruitment"
   - html2text
   - strip
 
