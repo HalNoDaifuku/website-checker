@@ -117,6 +117,62 @@ filter:
   - beautify
   - strip
 
+---
+
+name: "採用情報(通年募集) - エクスプロージョン"
+url: "https://www.explsn.com/"
+filter:
+  - css: "section#recruit"
+  - html2text
+  - strip
+
+---
+
+name: "採用情報 - BUG FILMS"
+url: "https://www.bugfilms.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - Seven Arcs"
+url: "https://7arcs.co.jp/recruit/requirements/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(新卒) - Production I.G"
+url: "https://www.production-ig.co.jp/recruit/graduates/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(キャリア) - Production I.G"
+url: "https://www.production-ig.co.jp/recruit/mid-career"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - OLM"
+url: "https://www.olm.co.jp/new-graduate"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - BONES"
+url: "https://www.bones.co.jp/recruit/"
+filter:
+  - beautify
+  - strip
 
 ---
 
@@ -150,7 +206,15 @@ url: "https://www.t2studio.co.jp/recruit.html"
 filter:
   - beautify
   - strip
-  
+
+---
+
+name: "採用情報 - ツインエンジングループ"
+url: "https://recruit.twinengine.jp/"
+filter:
+  - beautify
+  - strip
+
 ---
 
 name: "採用情報 - カラー"
