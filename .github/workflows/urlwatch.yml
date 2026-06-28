@@ -18,6 +18,10 @@ jobs:
     name: Run urlwatch
     runs-on: ubuntu-latest
 
+    # job全体のタイムアウト
+    # この時間を超えると、このjob全体が停止されます
+    timeout-minutes: 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
