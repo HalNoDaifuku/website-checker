@@ -51,4 +51,4 @@ report:
     colored: true
 
     # Discord通知のタイトル
-    subject: "{count}件のWebサイト変更: {jobs}"
+  subject: "{count}件のWebサイト変更"
