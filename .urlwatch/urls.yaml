@@ -228,8 +228,10 @@ filter:
 name: "採用情報 - Hibari Group"
 url: "https://hibari-group.jp/recruit/"
 filter:
+  - re.findall: '<!--\s*p-block-recruit\s*-->([\s\S]*?)<!--\s*p-block-recruit\s*-->'
   - html2text
   - strip
+  - striplines
 
 ---
 
