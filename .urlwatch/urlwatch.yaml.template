@@ -3,27 +3,22 @@ display:
   # 初回通知が不要なら false に変更してください
   new: true
 
-  # 変更検知時に通知する
+  # エラーも通知する
   error: true
 
   # 変更なしの場合は通知しない
   unchanged: false
 
-  # 差分が空になった場合も変更として扱う
+  # diff_filter などで差分が空になっても変更扱いにする
   empty-diff: true
 
 job_defaults:
-  all:
-    # 差分表示を unified diff にする
-    diff_tool: unified
-
   url:
-    # 一時的な接続エラーを無視しない
-    # 監視失敗もDiscordへ通知したいので false
-    ignore_connection_errors: false
-
     # HTTPキャッシュに引っ張られたくない場合は true
     ignore_cached: true
+
+    # 一時的な接続エラーも通知したいので false
+    ignore_connection_errors: false
 
 report:
   text:
