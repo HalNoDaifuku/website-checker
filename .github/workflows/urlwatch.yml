@@ -2,9 +2,10 @@ name: Website Change Monitor
 
 on:
   schedule:
-    # 30分ごとに実行
+    # 24時間おきに実行
     # GitHub Actions の cron は UTC 基準です
-    - cron: "*/30 * * * *"
+    # 0 0 * * * は、日本時間では毎日 9:00 実行です
+    - cron: "0 0 * * *"
 
   # 手動実行用
   workflow_dispatch:
