@@ -20,11 +20,59 @@ filter:
   - beautify
   - strip
 
---- 
+---
 
-name: "採用情報 - 株式会社ROLL2"
+name: "採用情報 - CloverWorks"
+url: "https://cloverworks.co.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(新卒) - 旭プロダクション"
+url: "https://asahi-pro.co.jp/recruit-cat/newgraduate"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(中途) - 旭プロダクション"
+url: "https://asahi-pro.co.jp/recruit-cat/midway"
+filter:
+  - beautify
+  - strip
+
+---
+
+name "採用情報(新卒) - グラフィニカ"
+url: "https://www.graphinica.com/recruit/graduates.html"
+filter:
+  - beautify
+  - strip
+
+---
+
+name "採用情報(経験者) - グラフィニカ"
+url: "https://www.graphinica.com/recruit/career.html"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報 - ROLL2"
 url: "https://www.roll2.co.jp/"
 filter:
   css: "section#recruit"
   - html2text
+  - strip
+
+---
+
+name: "採用情報 - C-Station"
+url: "http://cstation.jp/?page_id=215"
+filter:
+  - beautify
   - strip
