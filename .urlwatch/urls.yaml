@@ -2,16 +2,16 @@
 # A. ページ全体を監視する例
 # ============================================================
 # HTML全体を監視します。
-# ただし、広告・アクセス日時・ランダムIDなどがあるページは誤検知しやすいです。
+# 広告・現在時刻・ランダムIDなどがあるページは誤検知しやすいです。
 # その場合は下のBのようにCSSセレクタで対象範囲を絞ってください。
 
-- name: "Example - ページ全体監視"
-  url: "https://example.com/"
-  filter:
-    - beautify
-    - strip
+name: "Example - ページ全体監視"
+url: "https://example.com/"
+filter:
+  - beautify
+  - strip
 
-
+---
 
 # ============================================================
 # B. 特定の要素だけ監視する例
@@ -26,14 +26,14 @@
 #
 # 監視したいサイトに合わせて css の値を変更してください。
 
-- name: "Example - main要素のみ監視"
-  url: "https://example.com/"
-  filter:
-    - css: "main"
-    - html2text
-    - strip
+name: "Example - main要素のみ監視"
+url: "https://example.com/"
+filter:
+  - css: "main"
+  - html2text
+  - strip
 
-
+---
 
 # ============================================================
 # B. お知らせ一覧だけ監視する例
@@ -41,14 +41,14 @@
 # よくある「ニュース一覧」「お知らせ一覧」向けです。
 # CSSセレクタは対象サイトに合わせて変更してください。
 
-- name: "Example - お知らせ一覧監視"
-  url: "https://example.com/news/"
-  filter:
-    - css: ".news-list"
-    - html2text
-    - strip
+name: "Example - お知らせ一覧監視"
+url: "https://example.com/news/"
+filter:
+  - css: ".news-list"
+  - html2text
+  - strip
 
-
+---
 
 # ============================================================
 # C. JSON/APIを監視する例
@@ -56,13 +56,13 @@
 # APIレスポンス全体を整形して差分監視します。
 # JSONの順番や余計な値で誤検知する場合は jq を使って必要部分だけ抽出してください。
 
-- name: "Example - JSON API全体監視"
-  url: "https://api.github.com/repos/thp/urlwatch/releases/latest"
-  filter:
-    - format-json
-    - strip
+name: "Example - JSON API全体監視"
+url: "https://api.github.com/repos/thp/urlwatch/releases/latest"
+filter:
+  - format-json
+  - strip
 
-
+---
 
 # ============================================================
 # C. JSON/APIの特定キーだけ監視する例
@@ -70,8 +70,8 @@
 # jq を使って tag_name だけを監視します。
 # APIのバージョン更新チェックなどに向いています。
 
-- name: "Example - JSON APIのtag_nameのみ監視"
-  url: "https://api.github.com/repos/thp/urlwatch/releases/latest"
-  filter:
-    - jq: ".tag_name"
-    - strip
+name: "Example - JSON APIのtag_nameのみ監視"
+url: "https://api.github.com/repos/thp/urlwatch/releases/latest"
+filter:
+  - jq: ".tag_name"
+  - strip
