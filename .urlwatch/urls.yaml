@@ -164,7 +164,9 @@ name: "採用情報 - OLM"
 url: "https://www.olm.co.jp/new-graduate"
 filter:
   - html2text
+  - re.findall: '新卒採用 / Intern[\s\S]*?当サイトについて'
   - strip
+  - striplines
 
 ---
 
