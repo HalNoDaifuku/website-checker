@@ -6,8 +6,16 @@ filter:
 
 ---
 
-name: "アニメ・CG・ゲーム専門合同企業説明会　つくジョブ！"
+name: "つくジョブ！"
 url: "http://tukujob.com/"
 filter:
   - beautify
+  - strip
+
+---
+
+name: "インターン特集 - ViViViT"
+url: "https://www.vivivit.com/lps/internship"
+filter:
+  - beauty
   - strip
