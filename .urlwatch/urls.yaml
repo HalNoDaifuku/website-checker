@@ -22,6 +22,14 @@ filter:
 
 ---
 
+name: "採用情報(撮影 新卒) - A-1 Pictures"
+url: "https://cloverworks.co.jp/recruit/"
+filter:
+  - beautify
+  - strip
+
+---
+
 name: "採用情報 - CloverWorks"
 url: "https://cloverworks.co.jp/recruit/"
 filter:
