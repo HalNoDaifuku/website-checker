@@ -1,0 +1,77 @@
+name: Website Change Monitor
+
+on:
+  schedule:
+    # 30分ごとに実行
+    # GitHub Actions の cron は UTC 基準です
+    - cron: "*/30 * * * *"
+
+  # 手動実行用
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  urlwatch:
+    name: Run urlwatch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install urlwatch
+        run: |
+          python -m pip install --upgrade pip
+          pip install urlwatch
+
+      - name: Create urlwatch config from template
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+
+          if not webhook_url:
+              raise RuntimeError("DISCORD_WEBHOOK_URL is not set in GitHub Secrets.")
+
+          template_path = Path(".urlwatch/urlwatch.yaml.template")
+          output_path = Path(".urlwatch/urlwatch.yaml")
+
+          text = template_path.read_text(encoding="utf-8")
+          text = text.replace("__DISCORD_WEBHOOK_URL__", webhook_url)
+
+          output_path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Restore urlwatch cache
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: .urlwatch/cache.db
+          key: urlwatch-cache-${{ github.run_id }}
+          restore-keys: |
+            urlwatch-cache-
+
+      - name: Run urlwatch
+        run: |
+          urlwatch \
+            --config .urlwatch/urlwatch.yaml \
+            --urls .urlwatch/urls.yaml \
+            --cache .urlwatch/cache.db
+
+      - name: Save urlwatch cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .urlwatch/cache.db
+          key: urlwatch-cache-${{ github.run_id }}
