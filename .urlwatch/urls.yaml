@@ -155,7 +155,7 @@ filter:
 name: "採用情報(キャリア) - Production I.G"
 url: "https://www.production-ig.co.jp/recruit/mid-career"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
