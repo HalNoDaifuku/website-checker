@@ -236,7 +236,7 @@ filter:
 name: "採用情報 - ROLL2"
 url: "https://www.roll2.co.jp/"
 filter:
-  css: "section#recruit"
+  - css: "section#recruit"
   - html2text
   - strip
 
