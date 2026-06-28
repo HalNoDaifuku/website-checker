@@ -62,8 +62,25 @@ filter:
 
 ---
 
-name "採用情報(経験者) - グラフィニカ"
+name: "採用情報(経験者) - グラフィニカ"
 url: "https://www.graphinica.com/recruit/career.html"
+filter:
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(新卒) - ENGI"
+url: "https://engi-st.net/recruit_mid/"
+filter:
+  - css: "div.btn_requirements"
+  - beautify
+  - strip
+
+---
+
+name: "採用情報(中途) - ENGI"
+url: "https://engi-st.net/recruit_mid/"
 filter:
   - beautify
   - strip
