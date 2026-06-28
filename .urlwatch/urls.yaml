@@ -23,7 +23,7 @@ filter:
 ---
 
 name: "採用情報(撮影 新卒) - A-1 Pictures"
-url: "https://cloverworks.co.jp/recruit/"
+url: "https://a1p.jp/new_grad/shooting/"
 filter:
   - beautify
   - strip
@@ -177,7 +177,7 @@ filter:
 ---
 
 name: "採用情報(新卒) - ENGI"
-url: "https://engi-st.net/recruit_mid/"
+url: "https://engi-st.net/recruit/"
 filter:
   - css: "div.btn_requirements"
   - beautify
