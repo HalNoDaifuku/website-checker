@@ -22,9 +22,18 @@ job_defaults:
 
 report:
   text:
+    # 変更内容の差分を表示する
     details: true
+
+    # urlwatch のフッターを消す
     footer: false
-    line_length: 120
+
+    # 区切り線 ====== や ------ の長さに影響する
+    # 120 だと長すぎるので 40 に短縮
+    line_length: 40
+
+    # true にするとかなり簡素化される
+    # 差分を見たいので false のまま
     minimal: false
 
   stdout:
