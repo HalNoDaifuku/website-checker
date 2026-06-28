@@ -1,11 +1,3 @@
-name: "Example - ページ全体監視"
-url: "https://example.com/"
-filter:
-  - beautify
-  - strip
-
----
-
 name: "つくジョブ！"
 url: "http://tukujob.com/"
 filter:
@@ -81,17 +73,20 @@ filter:
 name: "採用情報 - MAD HOUSE"
 url: "https://madhouse.co.jp/recruit/"
 filter:
-  - css: "div.recruit-top__news"
   - html2text
+  - re.findall: '・お知らせ[\s\S]*?ABOUT|・募集中の職種[\s\S]*?WORKS'
   - strip
+  - striplines
 
 ---
 
 name: "採用情報 - MAD BOX"
 url: "https://madbox.jp/recruit/"
 filter:
-  - beautify
+  - html2text
+  - re.findall: '募集・応募状況[\s\S]*?MADBOXに関するお問い合わせ・ご依頼はこちら'
   - strip
+  - striplines
 
 ---
 
@@ -125,6 +120,7 @@ filter:
   - css: "section#recruit"
   - html2text
   - strip
+  - striplines
 
 ---
 
@@ -243,6 +239,7 @@ filter:
   - css: "section#recruit"
   - html2text
   - strip
+  - striplines
 
 ---
 
@@ -252,6 +249,7 @@ filter:
   - css: "section#recruitment"
   - html2text
   - strip
+  - striplines
 
 ---
 
