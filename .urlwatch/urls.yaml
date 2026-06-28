@@ -57,7 +57,7 @@ filter:
 name: "採用情報(新卒) - グラフィニカ"
 url: "https://www.graphinica.com/recruit/graduates.html"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -65,7 +65,7 @@ filter:
 name: "採用情報(経験者) - グラフィニカ"
 url: "https://www.graphinica.com/recruit/career.html"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -163,7 +163,7 @@ filter:
 name: "採用情報 - OLM"
 url: "https://www.olm.co.jp/new-graduate"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
