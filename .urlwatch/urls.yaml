@@ -19,3 +19,12 @@ url: "https://www.vivivit.com/lps/internship"
 filter:
   - beautify
   - strip
+
+--- 
+
+name: "採用情報 - 株式会社ROLL2"
+url: "https://www.roll2.co.jp/"
+filter:
+  css: "section#recruit"
+  - html2text
+  - strip
