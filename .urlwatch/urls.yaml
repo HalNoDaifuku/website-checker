@@ -33,7 +33,7 @@ filter:
 name: "採用情報 - CloverWorks"
 url: "https://cloverworks.co.jp/recruit/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -106,7 +106,7 @@ filter:
 name: "採用情報(新卒) - LIDENFILMS"
 url: "https://lidenfilms.jp/recruit/newgraduate/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -114,7 +114,7 @@ filter:
 name: "採用情報(中途) - LIDENFILMS"
 url: "https://lidenfilms.jp/recruit/midcareer/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -147,7 +147,7 @@ filter:
 name: "採用情報(新卒) - Production I.G"
 url: "https://www.production-ig.co.jp/recruit/graduates/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -228,7 +228,7 @@ filter:
 name: "採用情報 - Hibari Group"
 url: "https://hibari-group.jp/recruit/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
