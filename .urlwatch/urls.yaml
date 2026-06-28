@@ -54,7 +54,7 @@ filter:
 
 ---
 
-name "採用情報(新卒) - グラフィニカ"
+name: "採用情報(新卒) - グラフィニカ"
 url: "https://www.graphinica.com/recruit/graduates.html"
 filter:
   - beautify
