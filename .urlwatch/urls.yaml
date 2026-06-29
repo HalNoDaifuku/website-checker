@@ -9,7 +9,7 @@ filter:
 name: "インターン特集 - ViViViT"
 url: "https://www.vivivit.com/lps/internship"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -65,7 +65,7 @@ filter:
 name: "採用情報 - MAPPA"
 url: "https://www.mappa.co.jp/recruit/"
 filter:
-  - beautify
+  - html2text
   - strip
 
 ---
@@ -102,7 +102,9 @@ name: "採用情報(新卒) - LIDENFILMS"
 url: "https://lidenfilms.jp/recruit/newgraduate/"
 filter:
   - html2text
+  - re.findall: '新卒採用\s*募集職種[\s\S]*?SECTION セクション紹介'
   - strip
+  - striplines
 
 ---
 
@@ -110,7 +112,9 @@ name: "採用情報(中途) - LIDENFILMS"
 url: "https://lidenfilms.jp/recruit/midcareer/"
 filter:
   - html2text
+  - re.findall: '中途採用\s*募集職種[\s\S]*?SECTION セクション紹介'
   - strip
+  - striplines
 
 ---
 
