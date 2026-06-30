@@ -1,39 +1,19 @@
 display:
-  # 初回登録時も通知する
-  # 初回通知が不要なら false に変更してください
   new: true
-
-  # エラーも通知する
   error: true
-
-  # 変更なしの場合は通知しない
   unchanged: false
-
-  # diff_filter などで差分が空になっても変更扱いにする
   empty-diff: true
 
 job_defaults:
   url:
-    # HTTPキャッシュに引っ張られたくない場合は true
     ignore_cached: true
-
-    # 一時的な接続エラーも通知したいので false
     ignore_connection_errors: false
 
 report:
   text:
-    # 変更内容の差分を表示する
     details: true
-
-    # urlwatch のフッターを消す
     footer: false
-
-    # 区切り線 ====== や ------ の長さに影響する
-    # 120 だと長すぎるので 40 に短縮
     line_length: 40
-
-    # true にするとかなり簡素化される
-    # 差分を見たいので false のまま
     minimal: false
 
   stdout:
@@ -42,13 +22,8 @@ report:
 
   discord:
     enabled: true
+    separate: true
     webhook_url: "__DISCORD_WEBHOOK_URL__"
-
-    # Discord埋め込み形式
     embed: true
-
-    # diffを色付きコードブロック風にする
     colored: true
-
-    # Discord通知のタイトル
-  subject: "{count}件のWebサイト変更"
+    subject: "変更検知: {jobs}"
