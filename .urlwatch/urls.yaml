@@ -82,6 +82,10 @@ filter:
 
 name: "採用情報 - MAD BOX"
 url: "https://madbox.jp/recruit/"
+timeout: 180
+max_tries: 3
+headers:
+  User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 filter:
   - html2text
   - re.findall: '募集・応募状況[\s\S]*?MADBOXに関するお問い合わせ・ご依頼はこちら'
