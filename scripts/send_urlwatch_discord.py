@@ -7,8 +7,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import savepagenow
 
-DISCORD_MESSAGE_LIMIT = 1900
+
+DISCORD_MESSAGE_LIMIT = 1800
 
 
 def post_to_discord(webhook_url: str, content: str) -> None:
@@ -49,7 +51,7 @@ def split_long_text(text: str, limit: int = DISCORD_MESSAGE_LIMIT) -> list[str]:
 
     for line in text.splitlines(keepends=True):
         if len(current) + len(line) > limit:
-            if current:
+            if current.strip():
                 chunks.append(current.rstrip())
                 current = ""
 
@@ -68,9 +70,10 @@ def split_long_text(text: str, limit: int = DISCORD_MESSAGE_LIMIT) -> list[str]:
 def normalize_url(url: str) -> str:
     url = url.strip()
 
-    # urlwatch の重複回避用 #1, #2, #news などは通知上では消す
-    # ただし本当に意味のあるアンカーを使っている場合は消したくない可能性があるので、
-    # 必要ならこの処理をコメントアウトしてください。
+    # urlwatch の重複回避用フラグメントを通知・Wayback保存用には削除
+    # 例:
+    # https://example.com/recruit/#1 -> https://example.com/recruit/
+    # https://example.com/recruit/#news -> https://example.com/recruit/
     url = re.sub(r"#(?:\d+|news|jobs|button|text|topics-recruit)$", "", url)
 
     return url
@@ -137,7 +140,46 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
     return results
 
 
-def build_message(item: dict[str, str], chunk: str, index: int, total: int) -> str:
+def should_archive_with_wayback(status: str) -> bool:
+    # 「変更があった場合」に魚拓を取る
+    # 初回追加時も取りたいなら NEW を含めたままでOK
+    return status in {"NEW", "CHANGED"}
+
+
+def capture_wayback(url: str) -> tuple[str, str]:
+    if not url:
+        return "", "URLなし"
+
+    wayback_enabled = os.environ.get("WAYBACK_ENABLED", "false").lower() == "true"
+    if not wayback_enabled:
+        return "", "Wayback保存無効"
+
+    access_key = os.environ.get("SAVEPAGENOW_ACCESS_KEY", "").strip()
+    secret_key = os.environ.get("SAVEPAGENOW_SECRET_KEY", "").strip()
+    authenticate = bool(access_key and secret_key)
+
+    try:
+        archive_url, captured = savepagenow.capture_or_cache(
+            url,
+            authenticate=authenticate
+        )
+
+        if captured:
+            return archive_url, "保存しました"
+        return archive_url, "既存キャッシュを使用しました"
+
+    except Exception as e:
+        return "", f"Wayback保存失敗: {e}"
+
+
+def build_message(
+    item: dict[str, str],
+    archive_url: str,
+    archive_status: str,
+    chunk: str,
+    index: int,
+    total: int
+) -> str:
     status_label = {
         "NEW": "新規検知",
         "CHANGED": "変更検知",
@@ -151,6 +193,12 @@ def build_message(item: dict[str, str], chunk: str, index: int, total: int) -> s
     if item["url"]:
         url_line = f"\nURL: {item['url']}"
 
+    archive_line = ""
+    if archive_url:
+        archive_line = f"\nWayback: {archive_url}"
+    elif archive_status:
+        archive_line = f"\nWayback: {archive_status}"
+
     chunk_line = ""
     if total > 1:
         chunk_line = f"\n分割: {index}/{total}"
@@ -158,6 +206,7 @@ def build_message(item: dict[str, str], chunk: str, index: int, total: int) -> s
     return (
         f"{title}"
         f"{url_line}"
+        f"{archive_line}"
         f"{chunk_line}"
         f"\n```diff\n{chunk}\n```"
     )
@@ -188,15 +237,33 @@ def main() -> int:
 
     sent_count = 0
 
+    wayback_sleep_seconds = int(os.environ.get("WAYBACK_SLEEP_SECONDS", "0"))
+
     for item in items:
+        archive_url = ""
+        archive_status = ""
+
+        if should_archive_with_wayback(item["status"]):
+            archive_url, archive_status = capture_wayback(item["url"])
+
+            if wayback_sleep_seconds > 0:
+                time.sleep(wayback_sleep_seconds)
+
         chunks = split_long_text(item["body"])
 
         for index, chunk in enumerate(chunks, start=1):
-            message = build_message(item, chunk, index, len(chunks))
+            message = build_message(
+                item=item,
+                archive_url=archive_url,
+                archive_status=archive_status,
+                chunk=chunk,
+                index=index,
+                total=len(chunks)
+            )
             post_to_discord(webhook_url, message)
             sent_count += 1
 
-            # Discordの連投対策
+            # Discord連投対策
             time.sleep(1)
 
     print(f"Sent {sent_count} Discord message(s) for {len(items)} site(s).")
