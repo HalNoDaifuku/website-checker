@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     # job全体のタイムアウト
-    # この時間を超えると、このjob全体が停止されます
     timeout-minutes: 10
 
     steps:
@@ -41,20 +40,12 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           python - <<'PY'
-          import os
           from pathlib import Path
-
-          webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
-
-          if not webhook_url:
-              raise RuntimeError("DISCORD_WEBHOOK_URL is not set in GitHub Secrets.")
 
           template_path = Path(".urlwatch/urlwatch.yaml.template")
           output_path = Path(".urlwatch/urlwatch.yaml")
 
           text = template_path.read_text(encoding="utf-8")
-          text = text.replace("__DISCORD_WEBHOOK_URL__", webhook_url)
-
           output_path.write_text(text, encoding="utf-8")
           PY
 
@@ -68,11 +59,39 @@ jobs:
             urlwatch-cache-
 
       - name: Run urlwatch
+        id: run_urlwatch
+        continue-on-error: true
         run: |
+          set +e
+
           urlwatch \
             --config .urlwatch/urlwatch.yaml \
             --urls .urlwatch/urls.yaml \
-            --cache .urlwatch/cache.db
+            --cache .urlwatch/cache.db \
+            > report.txt 2>&1
+
+          EXIT_CODE=$?
+
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+          if [ -s report.txt ]; then
+            echo "has_report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_report=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "===== urlwatch report ====="
+          cat report.txt
+          echo "===== end urlwatch report ====="
+
+          exit 0
+
+      - name: Send Discord notifications per site
+        if: steps.run_urlwatch.outputs.has_report == 'true'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python scripts/send_urlwatch_discord.py report.txt
 
       - name: Save urlwatch cache
         if: always()
