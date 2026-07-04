@@ -4,6 +4,7 @@ import re
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -93,6 +94,55 @@ def clean_markdown_url(raw_url: str) -> str:
         return normalize_url(md_match.group(2))
 
     return normalize_url(raw_url)
+
+
+def is_timestamped_wayback_url(url: str) -> bool:
+    return bool(re.search(r"/web/\d{14}/", url))
+
+
+def get_timestamped_wayback_url(original_url: str, fallback_url: str = "") -> str:
+    """
+    Wayback Availability API から、タイムスタンプ付きの最新スナップショットURLを取得します。
+
+    savepagenow.capture_or_cache() が
+      https://web.archive.org/web/https://www.explsn.com/
+    のようなタイムスタンプなしURLを返す場合があるため、Discordに出すURLはここで補正します。
+    """
+    original_url = normalize_url(original_url)
+    fallback_url = fallback_url.strip()
+
+    if fallback_url and is_timestamped_wayback_url(fallback_url):
+        return fallback_url
+
+    query = urllib.parse.urlencode({"url": original_url})
+    api_url = f"https://archive.org/wayback/available?{query}"
+
+    request = urllib.request.Request(
+        api_url,
+        headers={
+            "User-Agent": "urlwatch-github-actions-discord"
+        },
+        method="GET"
+    )
+
+    with urllib.request.urlopen(request, timeout=30) as response:
+        data = json.loads(response.read().decode("utf-8", errors="replace"))
+
+    closest = data.get("archived_snapshots", {}).get("closest", {})
+    if closest.get("available"):
+        closest_url = closest.get("url", "").strip()
+        timestamp = closest.get("timestamp", "").strip()
+
+        if closest_url and is_timestamped_wayback_url(closest_url):
+            return closest_url.replace("http://web.archive.org/", "https://web.archive.org/")
+
+        if timestamp:
+            return f"https://web.archive.org/web/{timestamp}/{original_url}"
+
+    if fallback_url:
+        return fallback_url
+
+    return ""
 
 
 def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
@@ -215,7 +265,7 @@ def capture_wayback(url: str) -> tuple[str, str]:
     """
     Wayback Machine へ保存を試みます。
 
-    Discordに表示するURLは savepagenow が返すタイムスタンプ付きURLにします。
+    Discordに表示するURLは、必ず可能な限りタイムスタンプ付きURLにします。
     例:
       https://web.archive.org/web/20260512060439/https://www.explsn.com/
     """
@@ -239,12 +289,18 @@ def capture_wayback(url: str) -> tuple[str, str]:
             authenticate=authenticate
         )
 
+        # savepagenow の戻り値がタイムスタンプなしの場合があるため、
+        # Availability API で最新のタイムスタンプ付きURLに補正する。
+        time.sleep(3)
+        timestamped_url = get_timestamped_wayback_url(url, archive_url)
+
         if captured:
-            return archive_url, "保存しました"
-        return archive_url, "既存キャッシュを使用しました"
+            return timestamped_url, "保存しました"
+        return timestamped_url, "既存キャッシュを使用しました"
 
     except Exception as e:
         return "", f"Wayback保存失敗: {e}"
+
 
 def build_message(
     item: dict[str, str],
