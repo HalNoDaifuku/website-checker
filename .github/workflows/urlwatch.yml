@@ -86,7 +86,7 @@ jobs:
 
       - name: Upload urlwatch report to GitHub Actions artifact
         if: steps.run_urlwatch.outputs.has_report == 'true'
-        uses: acti*ns/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: urlwatch-report-${{ github.run_id }}
           path: report.txt
