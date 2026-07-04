@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # Wayback保存も行うため、変更件数が多い場合に備えて長めにする
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -86,6 +86,15 @@ jobs:
 
           exit 0
 
+      - name: Save urlwatch cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .urlwatch/cache.db
+            .urlwatch-last-good
+          key: urlwatch-cache-${{ github.run_id }}
+
       - name: Upload urlwatch report to GitHub Actions artifact
         if: steps.run_urlwatch.outputs.has_report == 'true'
         uses: actions/upload-artifact@v4
@@ -146,12 +155,3 @@ jobs:
           SAVEPAGENOW_SECRET_KEY: ${{ secrets.SAVEPAGENOW_SECRET_KEY }}
         run: |
           python scripts/send_urlwatch_discord.py report.txt
-
-      - name: Save urlwatch cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .urlwatch/cache.db
-            .urlwatch-last-good
-          key: urlwatch-cache-${{ github.run_id }}
