@@ -266,3 +266,263 @@ url: "http://cstation.jp/?page_id=215"
 filter:
   - beautify
   - strip
+
+---
+
+name: "採用情報 - 亜細亜堂"
+url: "https://ajiado.co.jp/recruit/job"
+filter:
+  - html2text
+  - re.findall: 'JOB\s*募集一覧[\s\S]*?亜細亜堂コーポレートサイト'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - 葦プロダクション"
+url: "http://ashipro.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: 'Recruit\s*採用情報[\s\S]*?© ASHI PRODUCTIONS'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - 京都アニメーション"
+url: "https://www.kyotoanimation.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: '職種紹介[\s\S]*?新卒採用、通年採用'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - サンジゲン"
+url: "https://www.sanzigen.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: 'RECRUIT\s*採用情報[\s\S]*?営業アシスタント'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - C2C"
+url: "https://www.c2c2009.com/recruit/"
+filter:
+  - html2text
+  - re.findall: 'RECRUIT\s*【2027年新卒向け】[\s\S]*?CONTACT'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - J.C.STAFF"
+url: "http://www.jcstaff.co.jp/"
+filter:
+  - html2text
+  - re.findall: '2027年4月入社新卒・既卒採用募集[\s\S]*?中途採用募集\s*募集職種：制作進行'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - SILVER LINK."
+url: "https://www.silverlink.co.jp/requirements/"
+filter:
+  - html2text
+  - re.findall: '募集要項[\s\S]*?応募締切'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - スタジオディーン"
+url: "https://www.deen.co.jp/recruitlist"
+filter:
+  - html2text
+  - re.findall: '新卒募集[\s\S]*?中途募集[\s\S]*?2024スタジオディーンプロモーション映像'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - ディオメディア"
+url: "https://www.diomedea.co.jp/recruit"
+filter:
+  - html2text
+  - re.findall: '採用メッセージ[\s\S]*?中途・二次新卒採用'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - CygamesPictures"
+url: "https://cygamespictures.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: 'Recruit[\s\S]*?© CygamesPictures'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - バンダイナムコフィルムワークス"
+url: "https://www.bnfw.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: 'NEWS[\s\S]*?JOBS'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - 颱風グラフィックス"
+url: "https://jobs.typhoon-g.com/"
+filter:
+  - html2text
+  - re.findall: '求人一覧[\s\S]*?応募フォーム'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - Tplus"
+url: "https://tplus.link/recruit.html"
+filter:
+  - html2text
+  - re.findall: '業務内容[\s\S]*?メール送付は'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - テラエフェクト"
+url: "https://tera-effect.com/recruit/"
+filter:
+  - html2text
+  - re.findall: 'RECRUIT / 採用情報[\s\S]*?Entry Form'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - バイブリーアニメーションCG"
+url: "http://bibury-cg.com/"
+filter:
+  - html2text
+  - re.findall: 'CGスタッフ積極採用中です！[\s\S]*?問い合わせフォーム'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - バイブリーアニメーションスタジオ"
+url: "http://bibury-st.com/recruit/"
+filter:
+  - html2text
+  - re.findall: '募集職種[\s\S]*?よく頂くご質問'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - パッショーネ"
+url: "https://passione-anime.com/recruit"
+filter:
+  - html2text
+  - re.findall: '求人情報[\s\S]*?個人情報の保護方針'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - 東映アニメーション"
+url: "https://corp.toei-anim.co.jp/ja/recruit.html"
+filter:
+  - html2text
+  - re.findall: '採用・募集情報[\s\S]*?募集情報はこちら'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - バンダイナムコピクチャーズ"
+url: "https://recruit.bn-pictures.co.jp/"
+filter:
+  - html2text
+  - re.findall: '採用のお知らせ[\s\S]*?キャリア採用\s*募集職種一覧'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - ENISHIYA"
+url: "http://www.enishiya-inc.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: '採用情報\s*RECRUIT[\s\S]*?応募ページはこちら'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - studioぱれっと"
+url: "https://studiopalette.net/recruit/"
+filter:
+  - html2text
+  - re.findall: 'Recruit[\s\S]*?戻る'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - ufotable デジタル映像部"
+url: "https://www.jobs-digitalteam.ufotable.co.jp/"
+filter:
+  - html2text
+  - re.findall: '募集するポジション[\s\S]*?お問い合わせについて'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報(撮影) - Yostar Pictures"
+url: "https://yostar-pictures.co.jp/recruit/detail/photograph/"
+filter:
+  - html2text
+  - re.findall: '撮影[\s\S]*?BACK'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報 - Studio BACU"
+url: "https://www.studio-bacu.com/"
+filter:
+  - html2text
+  - re.findall: '採用情報[\s\S]*?お問い合わせ'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報(撮影) - ゆめ太カンパニー"
+url: "https://yumeta.co.jp/recruit/mid04/"
+filter:
+  - html2text
+  - re.findall: '撮影部：撮影[\s\S]*?お問合せ'
+  - strip
+  - striplines
+
+---
+
+name: "採用情報(アニメーション撮影) - Point Pictures"
+url: "https://www.point-p.jp/recruiting/job07"
+filter:
+  - html2text
+  - re.findall: 'アニメーション撮影[\s\S]*?求人情報トップへ'
+  - strip
+  - striplines
