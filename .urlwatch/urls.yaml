@@ -47,18 +47,24 @@ filter:
 ---
 
 name: "採用情報(新卒) - グラフィニカ"
-url: "https://www.graphinica.com/recruit/graduates.html"
-filter:
-  - html2text
-  - strip
+command: >-
+  python scripts/fetch_urlwatch_last_good.py
+  --url https://www.graphinica.com/recruit/graduates.html
+  --last-good .urlwatch-last-good/graphinica-graduates.txt
+  --retries 2
+  --sleep 10
+  --timeout 60
 
 ---
 
-name: "採用情報(経験者) - グラフィニカ"
-url: "https://www.graphinica.com/recruit/career.html"
-filter:
-  - html2text
-  - strip
+name: "採用情報(中途) - グラフィニカ"
+command: >-
+  python scripts/fetch_urlwatch_last_good.py
+  --url https://www.graphinica.com/recruit/career.html
+  --last-good .urlwatch-last-good/graphinica-career.txt
+  --retries 2
+  --sleep 10
+  --timeout 60
 
 ---
 
