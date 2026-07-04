@@ -86,8 +86,8 @@ def normalize_url(url: str) -> str:
 def clean_markdown_url(raw_url: str) -> str:
     raw_url = raw_url.strip()
 
-    # fetch_file 経由などで report.txt が Markdown 化され、
-    # [https://example.com](https://example.com) 形式になっていても URL を取り出す。
+    # report.txt が Markdown 化され、
+    # [https://example.com](https://example.com) 形式になっていても URL を取り出します。
     md_match = re.match(r"\[(https?://[^\]]+)\]\((https?://[^)]+)\)", raw_url)
     if md_match:
         return normalize_url(md_match.group(2))
@@ -97,9 +97,8 @@ def clean_markdown_url(raw_url: str) -> str:
 
 def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
     """
-    urlwatch の stdout/text レポートを、1ジョブ=1セクションに分割する。
+    urlwatch の stdout/text レポートを、1ジョブ=1セクションに分割します。
 
-    重要:
     urlwatch レポートの先頭には、以下のような概要行が出ることがあります。
       01. CHANGED: A
       02. CHANGED: B
@@ -155,7 +154,7 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
 
         return results
 
-    # 予備: もし詳細ヘッダーがない古い形式の場合だけ、番号付き行で分割する。
+    # 予備: もし詳細ヘッダーがない古い形式の場合だけ、番号付き行で分割します。
     fallback_heading_pattern = re.compile(
         r"^\s*\d+\.\s+(NEW|CHANGED|ERROR|UNCHANGED):\s+(.+?)\s*$"
     )
@@ -207,12 +206,19 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
 
 
 def should_archive_with_wayback(status: str) -> bool:
-    # 「変更があった場合」に魚拓を取る。
-    # 初回追加時も取りたいなら NEW を含めたままでOK。
+    # 「変更があった場合」に魚拓を取ります。
+    # 初回追加時も取りたいなら NEW を含めたままでOKです。
     return status in {"NEW", "CHANGED"}
 
 
 def capture_wayback(url: str) -> tuple[str, str]:
+    """
+    Wayback Machine へ保存を試みます。
+
+    Discordに表示するURLは savepagenow が返すタイムスタンプ付きURLにします。
+    例:
+      https://web.archive.org/web/20260512060439/https://www.explsn.com/
+    """
     if not url:
         return "", "URLなし"
 
@@ -239,7 +245,6 @@ def capture_wayback(url: str) -> tuple[str, str]:
 
     except Exception as e:
         return "", f"Wayback保存失敗: {e}"
-
 
 def build_message(
     item: dict[str, str],
@@ -280,7 +285,7 @@ def build_message(
         f"\n```diff\n{chunk}\n```"
     )
 
-    # Discordの2000文字制限を超えないように最終保険をかける。
+    # Discordの2000文字制限を超えないように最終保険をかけます。
     if len(message) > DISCORD_HARD_LIMIT:
         over = len(message) - DISCORD_HARD_LIMIT
         shortened_chunk = chunk[: max(0, len(chunk) - over - 20)] + "\n..."
