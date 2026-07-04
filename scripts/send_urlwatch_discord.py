@@ -7,10 +7,14 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-import savepagenow
+try:
+    import savepagenow
+except ImportError:
+    savepagenow = None
 
 
-DISCORD_MESSAGE_LIMIT = 1800
+DISCORD_HARD_LIMIT = 2000
+DISCORD_CHUNK_LIMIT = 1450
 
 
 def post_to_discord(webhook_url: str, content: str) -> None:
@@ -45,7 +49,7 @@ def post_to_discord(webhook_url: str, content: str) -> None:
         raise RuntimeError(f"Discord webhook URLError: {e}") from e
 
 
-def split_long_text(text: str, limit: int = DISCORD_MESSAGE_LIMIT) -> list[str]:
+def split_long_text(text: str, limit: int = DISCORD_CHUNK_LIMIT) -> list[str]:
     chunks: list[str] = []
     current = ""
 
@@ -70,7 +74,7 @@ def split_long_text(text: str, limit: int = DISCORD_MESSAGE_LIMIT) -> list[str]:
 def normalize_url(url: str) -> str:
     url = url.strip()
 
-    # urlwatch の重複回避用フラグメントを通知・Wayback保存用には削除
+    # urlwatch の重複回避用フラグメントを通知・Wayback保存用には削除します。
     # 例:
     # https://example.com/recruit/#1 -> https://example.com/recruit/
     # https://example.com/recruit/#news -> https://example.com/recruit/
@@ -79,18 +83,88 @@ def normalize_url(url: str) -> str:
     return url
 
 
+def clean_markdown_url(raw_url: str) -> str:
+    raw_url = raw_url.strip()
+
+    # fetch_file 経由などで report.txt が Markdown 化され、
+    # [https://example.com](https://example.com) 形式になっていても URL を取り出す。
+    md_match = re.match(r"\[(https?://[^\]]+)\]\((https?://[^)]+)\)", raw_url)
+    if md_match:
+        return normalize_url(md_match.group(2))
+
+    return normalize_url(raw_url)
+
+
 def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
+    """
+    urlwatch の stdout/text レポートを、1ジョブ=1セクションに分割する。
+
+    重要:
+    urlwatch レポートの先頭には、以下のような概要行が出ることがあります。
+      01. CHANGED: A
+      02. CHANGED: B
+
+    これをセクション開始として使うと、URLとdiffが次の会社とズレる原因になります。
+    そのため、詳細ヘッダーだけをセクション開始として扱います。
+
+    詳細ヘッダー例:
+      CHANGED: 採用情報 - A ( https://example.com/ )
+      ### CHANGED: 採用情報 - A ( [https://example.com/](https://example.com/) )
+      ERROR: 採用情報 - A ( https://example.com/ )
+    """
     lines = report_text.splitlines()
+
+    detail_heading_pattern = re.compile(
+        r"^\s*(?:#{1,6}\s*)?"
+        r"(NEW|CHANGED|ERROR|UNCHANGED):\s+"
+        r"(.+?)\s+"
+        r"\(\s*(\[https?://[^\]]+\]\(https?://[^)]+\)|https?://[^\s)]+)\s*\)\s*$"
+    )
+
+    starts: list[tuple[int, re.Match[str]]] = []
+
+    for index, line in enumerate(lines):
+        match = detail_heading_pattern.match(line)
+        if match:
+            starts.append((index, match))
+
+    results: list[dict[str, str]] = []
+
+    # 詳細ヘッダーが取れる通常ケース
+    if starts:
+        for pos, (start_index, match) in enumerate(starts):
+            end_index = starts[pos + 1][0] if pos + 1 < len(starts) else len(lines)
+            section_lines = lines[start_index:end_index]
+            section_text = "\n".join(section_lines).strip()
+
+            status = match.group(1)
+            name = match.group(2).strip()
+            url = clean_markdown_url(match.group(3))
+
+            if status == "UNCHANGED":
+                continue
+
+            results.append(
+                {
+                    "status": status,
+                    "name": name,
+                    "url": url,
+                    "body": section_text,
+                }
+            )
+
+        return results
+
+    # 予備: もし詳細ヘッダーがない古い形式の場合だけ、番号付き行で分割する。
+    fallback_heading_pattern = re.compile(
+        r"^\s*\d+\.\s+(NEW|CHANGED|ERROR|UNCHANGED):\s+(.+?)\s*$"
+    )
 
     sections: list[list[str]] = []
     current: list[str] = []
 
-    heading_pattern = re.compile(
-        r"^\d+\.\s+(NEW|CHANGED|ERROR|UNCHANGED):\s+(.+)$"
-    )
-
     for line in lines:
-        if heading_pattern.match(line):
+        if fallback_heading_pattern.match(line):
             if current:
                 sections.append(current)
             current = [line]
@@ -101,13 +175,10 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
     if current:
         sections.append(current)
 
-    results: list[dict[str, str]] = []
-
     for section_lines in sections:
         section_text = "\n".join(section_lines).strip()
-
         first_line = section_lines[0].strip()
-        heading_match = heading_pattern.match(first_line)
+        heading_match = fallback_heading_pattern.match(first_line)
 
         if not heading_match:
             continue
@@ -115,15 +186,10 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
         status = heading_match.group(1)
         name = heading_match.group(2).strip()
 
-        # 変更なしは通知しない
         if status == "UNCHANGED":
             continue
 
         url = ""
-
-        # 例:
-        # CHANGED: 採用情報 - OLM ( https://www.olm.co.jp/new-graduate )
-        # ERROR: Example ( https://example.com/ )
         url_match = re.search(r"\(\s*(https?://[^\s)]+)\s*\)", section_text)
         if url_match:
             url = normalize_url(url_match.group(1))
@@ -141,8 +207,8 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
 
 
 def should_archive_with_wayback(status: str) -> bool:
-    # 「変更があった場合」に魚拓を取る
-    # 初回追加時も取りたいなら NEW を含めたままでOK
+    # 「変更があった場合」に魚拓を取る。
+    # 初回追加時も取りたいなら NEW を含めたままでOK。
     return status in {"NEW", "CHANGED"}
 
 
@@ -153,6 +219,9 @@ def capture_wayback(url: str) -> tuple[str, str]:
     wayback_enabled = os.environ.get("WAYBACK_ENABLED", "false").lower() == "true"
     if not wayback_enabled:
         return "", "Wayback保存無効"
+
+    if savepagenow is None:
+        return "", "Wayback保存失敗: savepagenow がインストールされていません"
 
     access_key = os.environ.get("SAVEPAGENOW_ACCESS_KEY", "").strip()
     secret_key = os.environ.get("SAVEPAGENOW_SECRET_KEY", "").strip()
@@ -203,13 +272,27 @@ def build_message(
     if total > 1:
         chunk_line = f"\n分割: {index}/{total}"
 
-    return (
+    message = (
         f"{title}"
         f"{url_line}"
         f"{archive_line}"
         f"{chunk_line}"
         f"\n```diff\n{chunk}\n```"
     )
+
+    # Discordの2000文字制限を超えないように最終保険をかける。
+    if len(message) > DISCORD_HARD_LIMIT:
+        over = len(message) - DISCORD_HARD_LIMIT
+        shortened_chunk = chunk[: max(0, len(chunk) - over - 20)] + "\n..."
+        message = (
+            f"{title}"
+            f"{url_line}"
+            f"{archive_line}"
+            f"{chunk_line}"
+            f"\n```diff\n{shortened_chunk}\n```"
+        )
+
+    return message
 
 
 def main() -> int:
@@ -228,7 +311,6 @@ def main() -> int:
         return 1
 
     report_text = report_path.read_text(encoding="utf-8", errors="replace")
-
     items = parse_urlwatch_report(report_text)
 
     if not items:
@@ -236,7 +318,6 @@ def main() -> int:
         return 0
 
     sent_count = 0
-
     wayback_sleep_seconds = int(os.environ.get("WAYBACK_SLEEP_SECONDS", "0"))
 
     for item in items:
