@@ -84,6 +84,48 @@ jobs:
 
           exit 0
 
+      - name: Upload urlwatch report to GitHub Actions artifact
+        if: steps.run_urlwatch.outputs.has_report == 'true'
+        uses: acti*ns/upload-artifact@v4
+        with:
+          name: urlwatch-report-${{ github.run_id }}
+          path: report.txt
+          if-no-files-found: ignore
+
+      - name: Send urlwatch report file to Discord
+        if: steps.run_urlwatch.outputs.has_report == 'true'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            echo "DISCORD_WEBHOOK_URL is not set."
+            exit 1
+          fi
+
+          REPORT_FILE="urlwatch-report-${GITHUB_RUN_ID}.txt"
+          cp report.txt "${REPORT_FILE}"
+
+          ATTACH_FILE="${REPORT_FILE}"
+
+          # レポートが大きい場合は gzip してから送る
+          # Discord側の添付上限に引っかかりにくくするための保険です
+          if [ "$(wc -c < "${REPORT_FILE}")" -gt 20000000 ]; then
+            gzip -c "${REPORT_FILE}" > "${REPORT_FILE}.gz"
+            ATTACH_FILE="${REPORT_FILE}.gz"
+          fi
+
+          cat > payload.json <<'JSON'
+          {
+            "content": "urlwatch が生成したレポートファイルを添付します。"
+          }
+          JSON
+
+          curl -sS -X POST "${DISCORD_WEBHOOK_URL}" \
+            -F "payload_json=<payload.json" \
+            -F "file1=@${ATTACH_FILE}"
+
       - name: Send Discord notifications per site
         if: steps.run_urlwatch.outputs.has_report == 'true'
         env:
