@@ -51,7 +51,9 @@ jobs:
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
-          path: .urlwatch/cache.db
+          path: |
+            .urlwatch/cache.db
+            .urlwatch-last-good
           key: urlwatch-cache-${{ github.run_id }}
           restore-keys: |
             urlwatch-cache-
@@ -149,5 +151,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: .urlwatch/cache.db
+          path: |
+            .urlwatch/cache.db
+            .urlwatch-last-good
           key: urlwatch-cache-${{ github.run_id }}
