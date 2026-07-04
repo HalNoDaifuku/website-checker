@@ -349,14 +349,13 @@ filter:
 
 ---
 
-name: "採用情報 - ディオメディア"
-url: "https://www.diomedea.co.jp/recruit"
+name: "採用情報(撮影 新卒) - ディオメディア"
+url: "https://www.diomedea.co.jp/recruit-sin-satsuei"
 filter:
   - html2text
-  - re.findall: '採用メッセージ[\s\S]*?中途・二次新卒採用'
+  - re.findall: '求人情報\s*撮影[\s\S]*?＜書類の宛先＞[\s\S]*?株式会社ディオメディア'
   - strip
   - striplines
-
 ---
 
 name: "採用情報 - CygamesPictures"
@@ -369,14 +368,13 @@ filter:
 
 ---
 
-name: "採用情報 - バンダイナムコフィルムワークス"
-url: "https://www.bnfw.co.jp/recruit/"
+name: "採用情報(中途) - バンダイナムコフィルムワークス"
+url: "https://www.bnfw.co.jp/recruit/recruit/"
 filter:
   - html2text
-  - re.findall: 'NEWS[\s\S]*?JOBS'
+  - re.findall: '募集職種について[\s\S]*?採用に関するお問い合わせ'
   - strip
   - striplines
-
 ---
 
 name: "採用情報 - 颱風グラフィックス"
@@ -409,14 +407,13 @@ filter:
 
 ---
 
-name: "採用情報 - バイブリーアニメーションCG"
+name: "採用情報(新卒・中途) - バイブリーアニメーションCG"
 url: "http://bibury-cg.com/"
 filter:
   - html2text
-  - re.findall: 'CGスタッフ積極採用中です！[\s\S]*?問い合わせフォーム'
+  - re.findall: '募集職種[\s\S]*?↓求人について詳細はこちら↓'
   - strip
   - striplines
-
 ---
 
 name: "採用情報 - バイブリーアニメーションスタジオ"
@@ -479,14 +476,13 @@ filter:
 
 ---
 
-name: "採用情報 - ufotable デジタル映像部"
-url: "https://www.jobs-digitalteam.ufotable.co.jp/"
+name: "採用情報 - ufotable"
+url: "https://www.ufotable.com/careers/"
 filter:
   - html2text
-  - re.findall: '募集するポジション[\s\S]*?お問い合わせについて'
+  - re.findall: 'Creative\s*クリエイティブ[\s\S]*?ビジネス\s*Business'
   - strip
   - striplines
-
 ---
 
 name: "採用情報(撮影) - Yostar Pictures"
@@ -509,14 +505,22 @@ filter:
 
 ---
 
-name: "採用情報(撮影) - ゆめ太カンパニー"
+name: "採用情報(新卒) - ゆめ太カンパニー"
+url: "https://yumeta.co.jp/recruit/"
+filter:
+  - html2text
+  - re.findall: '募集職種\s*新卒募集[\s\S]*?中途募集'
+  - strip
+  - striplines
+---
+
+name: "採用情報(撮影 中途) - ゆめ太カンパニー"
 url: "https://yumeta.co.jp/recruit/mid04/"
 filter:
   - html2text
   - re.findall: '撮影部：撮影[\s\S]*?お問合せ'
   - strip
   - striplines
-
 ---
 
 name: "採用情報(アニメーション撮影) - Point Pictures"
