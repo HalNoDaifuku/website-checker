@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import time
+import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -16,6 +17,10 @@ except ImportError:
 
 DISCORD_HARD_LIMIT = 2000
 DISCORD_CHUNK_LIMIT = 1450
+
+# Wayback失敗時などに例外メッセージが異常に長くなるケース(archive.orgが
+# HTMLのエラーページを返す等)への対策。ここで長さの上限を設けておく。
+MAX_STATUS_MESSAGE_LENGTH = 300
 
 
 def post_to_discord(webhook_url: str, content: str) -> None:
@@ -84,16 +89,33 @@ def normalize_url(url: str) -> str:
     return url
 
 
-def clean_markdown_url(raw_url: str) -> str:
-    raw_url = raw_url.strip()
+def extract_url_from_paren_content(raw: str) -> str:
+    """
+    詳細ヘッダーの括弧の中身からURLを取り出します。
 
-    # report.txt が Markdown 化され、
-    # [https://example.com](https://example.com) 形式になっていても URL を取り出します。
-    md_match = re.match(r"\[(https?://[^\]]+)\]\((https?://[^)]+)\)", raw_url)
+    通常の url: ジョブは括弧の中がそのままURL (Markdown化されていれば
+    [url](url) 形式) ですが、command: ジョブ (例: グラフィニカの
+    fetch_urlwatch_last_good.py 経由の取得) の場合は括弧の中身が
+
+      python scripts/fetch_urlwatch_last_good.py --url https://example.com/... --last-good ...
+
+    のようにコマンドライン全体になります。以前はこの形式を全く想定して
+    おらず、見出し行自体がパース用の正規表現にマッチせず、該当サイトの
+    通知がまるごと無言でロストしていました。ここでは括弧の中身に含まれる
+    最初のURLを拾うことで、コマンド形式でも正しく通知できるようにします。
+    """
+    raw = raw.strip()
+
+    md_match = re.match(r"^\[(https?://[^\]]+)\]\((https?://[^)]+)\)$", raw)
     if md_match:
         return normalize_url(md_match.group(2))
 
-    return normalize_url(raw_url)
+    url_match = re.search(r"https?://\S+", raw)
+    if url_match:
+        return normalize_url(url_match.group(0).rstrip(")"))
+
+    # URLが見当たらない場合(通常は起きない想定)は、そのまま返しておく。
+    return normalize_url(raw)
 
 
 def is_timestamped_wayback_url(url: str) -> bool:
@@ -160,14 +182,17 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
       CHANGED: 採用情報 - A ( https://example.com/ )
       ### CHANGED: 採用情報 - A ( [https://example.com/](https://example.com/) )
       ERROR: 採用情報 - A ( https://example.com/ )
+      CHANGED: 採用情報 - グラフィニカ ( python scripts/fetch_urlwatch_last_good.py --url https://example.com/ ... )
     """
     lines = report_text.splitlines()
 
+    # 括弧の中身は「URLそのもの」でも「command: ジョブのコマンドライン」でも
+    # 拾えるように、中身は緩めにマッチさせ、URLの抽出は別関数に任せる。
     detail_heading_pattern = re.compile(
         r"^\s*(?:#{1,6}\s*)?"
         r"(NEW|CHANGED|ERROR|UNCHANGED):\s+"
         r"(.+?)\s+"
-        r"\(\s*(\[https?://[^\]]+\]\(https?://[^)]+\)|https?://[^\s)]+)\s*\)\s*$"
+        r"\(\s*(.+?)\s*\)\s*$"
     )
 
     starts: list[tuple[int, re.Match[str]]] = []
@@ -188,7 +213,7 @@ def parse_urlwatch_report(report_text: str) -> list[dict[str, str]]:
 
             status = match.group(1)
             name = match.group(2).strip()
-            url = clean_markdown_url(match.group(3))
+            url = extract_url_from_paren_content(match.group(3))
 
             if status == "UNCHANGED":
                 continue
@@ -272,6 +297,10 @@ def capture_wayback(url: str) -> tuple[str, str]:
     if not url:
         return "", "URLなし"
 
+    if not url.startswith(("http://", "https://")):
+        # command: ジョブなどでURLが取り出せなかった場合の保険。
+        return "", "Wayback保存スキップ: 有効なURLを取得できませんでした"
+
     wayback_enabled = os.environ.get("WAYBACK_ENABLED", "false").lower() == "true"
     if not wayback_enabled:
         return "", "Wayback保存無効"
@@ -299,7 +328,13 @@ def capture_wayback(url: str) -> tuple[str, str]:
         return timestamped_url, "既存キャッシュを使用しました"
 
     except Exception as e:
-        return "", f"Wayback保存失敗: {e}"
+        # archive.org側がHTMLのエラーページ等を返すと、例外メッセージが
+        # 数千文字になることがある。Discordメッセージの組み立てで
+        # オーバーヘッドが肥大化しないよう、ここで長さを打ち切っておく。
+        message = str(e).replace("\n", " ").strip()
+        if len(message) > MAX_STATUS_MESSAGE_LENGTH:
+            message = message[:MAX_STATUS_MESSAGE_LENGTH] + "…(省略)"
+        return "", f"Wayback保存失敗: {message}"
 
 
 def build_message(
@@ -333,25 +368,33 @@ def build_message(
     if total > 1:
         chunk_line = f"\n分割: {index}/{total}"
 
-    message = (
-        f"{title}"
-        f"{url_line}"
-        f"{archive_line}"
-        f"{chunk_line}"
-        f"\n```diff\n{chunk}\n```"
-    )
-
-    # Discordの2000文字制限を超えないように最終保険をかけます。
-    if len(message) > DISCORD_HARD_LIMIT:
-        over = len(message) - DISCORD_HARD_LIMIT
-        shortened_chunk = chunk[: max(0, len(chunk) - over - 20)] + "\n..."
-        message = (
+    def assemble(body: str) -> str:
+        return (
             f"{title}"
             f"{url_line}"
             f"{archive_line}"
             f"{chunk_line}"
-            f"\n```diff\n{shortened_chunk}\n```"
+            f"\n```diff\n{body}\n```"
         )
+
+    message = assemble(chunk)
+
+    # 数式ベースの見積もりだけに頼らず、最終的な長さを必ずチェックして
+    # 2000文字を超えないようにする(タイトルやURL・Waybackステータス側が
+    # 想定以上に長くなった場合の保険)。
+    if len(message) > DISCORD_HARD_LIMIT:
+        over = len(message) - DISCORD_HARD_LIMIT
+        shortened_chunk = chunk[: max(0, len(chunk) - over - 20)] + "\n...(省略)"
+        message = assemble(shortened_chunk)
+
+    if len(message) > DISCORD_HARD_LIMIT:
+        # それでも超える場合(タイトルやURL自体が極端に長い等)は、
+        # 本文を思い切って落として最低限の情報だけ残す。
+        message = assemble("(内容が長すぎるため省略しました)")
+
+    if len(message) > DISCORD_HARD_LIMIT:
+        # 最終手段: メッセージ全体を強制的に切り詰める。
+        message = message[: DISCORD_HARD_LIMIT - 4] + "\n..."
 
     return message
 
@@ -379,6 +422,7 @@ def main() -> int:
         return 0
 
     sent_count = 0
+    failed_count = 0
     wayback_sleep_seconds = int(os.environ.get("WAYBACK_SLEEP_SECONDS", "0"))
 
     for item in items:
@@ -402,14 +446,33 @@ def main() -> int:
                 index=index,
                 total=len(chunks)
             )
-            post_to_discord(webhook_url, message)
-            sent_count += 1
+
+            # 1件の送信失敗でジョブ全体を落とさない。
+            # (以前はここで例外が伝播し、以降の全サイトの通知が
+            #  送信されないままスクリプトごと異常終了していた)
+            try:
+                post_to_discord(webhook_url, message)
+                sent_count += 1
+            except Exception:
+                failed_count += 1
+                print(
+                    f"Failed to send Discord message for '{item['name']}' "
+                    f"(chunk {index}/{len(chunks)}):",
+                    file=sys.stderr
+                )
+                traceback.print_exc()
 
             # Discord連投対策
             time.sleep(1)
 
-    print(f"Sent {sent_count} Discord message(s) for {len(items)} site(s).")
-    return 0
+    print(
+        f"Sent {sent_count} Discord message(s) for {len(items)} site(s). "
+        f"({failed_count} failed)"
+    )
+
+    # 一部失敗しても他サイトの通知は届いている状態なので、
+    # CI上は分かるように失敗があれば非ゼロで終了しつつ、処理自体は最後まで行う。
+    return 1 if failed_count > 0 else 0
 
 
 if __name__ == "__main__":
