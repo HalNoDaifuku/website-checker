@@ -183,6 +183,15 @@ filter:
 name: "採用情報 - BONES"
 url: "https://www.bones.co.jp/recruit/"
 filter:
+  # WordPressのnonce(ajaxurlのセキュリティトークン等)はアクセスの度に
+  # 値が変わり、内容自体は変わっていないのに毎回CHANGED扱いになってしまう。
+  # 差分を取る前に <script>/<style> の中身ごと除去しておく。
+  - re.sub:
+      pattern: '(?is)<script\b[^>]*>.*?</script>'
+      repl: ''
+  - re.sub:
+      pattern: '(?is)<style\b[^>]*>.*?</style>'
+      repl: ''
   - beautify
   - strip
 
@@ -435,6 +444,16 @@ filter:
 name: "採用情報 - パッショーネ"
 url: "https://passione-anime.com/recruit"
 filter:
+  # このページはコメントアウトされたJSがhtml2textの結果に紛れ込み、
+  # WordPressのnonce(セキュリティトークン)がアクセスの度に変わることで
+  # 内容が変わっていなくても毎回CHANGED扱いになっていた。
+  # 差分を取る前に <script>/<style> の中身ごと除去しておく。
+  - re.sub:
+      pattern: '(?is)<script\b[^>]*>.*?</script>'
+      repl: ''
+  - re.sub:
+      pattern: '(?is)<style\b[^>]*>.*?</style>'
+      repl: ''
   - html2text
   - re.findall: '求人情報[\s\S]*?個人情報の保護方針'
   - strip
